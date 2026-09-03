@@ -1,4 +1,5 @@
-import {configuraTudo, desenhaLinhas,  atualizaVertices} from "./draw.js"
+import {configuraTudo, desenhaCubos,  atualizaVertices} from "./scripts/draw.js"
+import {atualizaCena} from "./scripts/scene.js"
 
 const inputv = document.getElementById("vert");
 let valor = Number(inputv.value);
