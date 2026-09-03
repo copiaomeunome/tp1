@@ -94,10 +94,11 @@ export async function configuraTudo(){                                          
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.bindVertexArray(vao);
 
-    return {gl,modelLocation, vboColor};
+    const textureLocation = gl.getUniformLocation(program, "u_texture");
+    return {gl,modelLocation, textureLocation};
 }
 
-export function desenhaCena({gl,modelLocation, vboColor}, squares_vector) {
+export function desenhaCena({gl,modelLocation, textureLocation}, squares_vector) {
     const menorDim = Math.min(canvas.width, canvas.height);                                          // define o quadrado do centro e as posições centrais
     const lQuadrado = menorDim/3;
     for(let square of squares_vector){
@@ -127,4 +128,17 @@ function ortho(left, right, bottom, top, near, far) {                           
     0, 0, -2/(far-near),  0,
     tx, ty, tz,           1
   ])
+}
+export async function carregarTextura(gl, caminho) {
+    const image = new Image();
+    image.src = caminho;
+    await image.decode();
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return texture;
 }
