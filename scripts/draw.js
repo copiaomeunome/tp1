@@ -95,7 +95,7 @@ export async function configuraTudo(){                                          
     gl.bindVertexArray(vao);
 
     const textureLocation = gl.getUniformLocation(program, "u_texture");
-    return {gl,modelLocation, textureLocation};
+    return {gl,modelLocation, textureLocation, width:canvas.width, height:canvas.height};
 }
 
 export function desenhaCena({gl,modelLocation, textureLocation}, squares_vector) {

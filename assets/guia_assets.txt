@@ -1,0 +1,68 @@
+GUIA DOS ASSETS
+
+As spritesheets de animação descritas neste guia têm seus quadros em fila, da esquerda para a direita. Cada quadro (estado) tem a mesma
+largura de 112 pixels e altura de 112 pixels
+ao desenhar, os quadros são assim:
+[quadro 1 - 112px de largura], [quadro 2 - 112px de largura], [quadro 3 - 112px de largura]
+
+
+Cada spritesheet deve ser tratado como um vetor que começa com o índice 1 (se é que isso faz sentidokk)
+notação de intervalos: [início,fim]
+Exemplo: [1,4] corresponde aos quadros 1, 2, 3 e 4
+Um índice isolado (ex: [1]) indica um único quadro
+
+Exceção: truth, projectiles and effects/the_truth.png mede 1024 x 1024 pixels e não faz parte das spritesheets de quadros de 112 pixels mapeadas neste guia, mas ele tá só no cantinho e eu fiquei com preguiça de medir ele, então os valores que estiverem na programação devem estar hardcoded
+
+ALPHONSE — PROTAGONISTA
+Arquivo: alphonse.png
+Spritesheet: 2800x112px
+25 quadros
+
+[1,4]   Idle                    //arrumar esses tabs
+[5,8]   Andando para a direita
+[9,12]  Andando para a esquerda
+[13,16] Andando para baixo
+[17,20] Andando para cima
+[21,25] Conjurando alquimia
+
+ENVY — INIMIGO QUE APARECE EM ENXAME
+Arquivo: envy.png
+Spritesheet: 2352x112px
+21 quadros
+
+[1]     Idle
+[2,5]   Andando para baixo
+[6,9]   Andando para a direita
+[10,13] Andando para a esquerda
+[14,17] Andando para cima
+[18,21] MMorte
+
+SHAO MAY — TORRE PRINCIPAL
+Arquivo: shao may.png
+Spritesheet: 448x112px
+4 quadros
+
+[1,4] Idle
+
+TOWER — TORRE QUE PODE SER CONSTRUÍDA
+Arquivo: tower.png
+Spritesheet: 784x112 pixels
+7 quadros
+
+[1] Torre de nível 1
+[2] Torre evoluída nível 2
+[3] Símbolo de invocação, deve ser desenhado ao invocar a torre e permanecer por um curto período após a invocação, atrás dela.
+[4] Arma da torre de nível 1 atirando para a direita
+[5] Arma da torre de nível 1 atirando para a esquerda
+[6] Arma da torre de nível 2 atirando para a direita
+[7] Arma da torre de nível 2 atirando para a esquerda
+
+PROJÉTEIS E EFEITOS
+Arquivo: projectiles and effects.png
+Spritesheet: 672x112 pixels
+6 quadros
+
+[1]   Projétil disparado pelo Alphonse
+[2]   Projétil disparado pela torre invocada de nível 1
+[3]   Projétil disparado pela torre de nível 2. Aplica queimadura
+[4,6] Animação de queimadura, exibida ao aplicar queimadura

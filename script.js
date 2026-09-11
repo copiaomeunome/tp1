@@ -1,18 +1,25 @@
 import {configuraTudo, desenhaCubos,  atualizaVertices} from "./scripts/draw.js"
-import {atualizaCena} from "./scripts/scene.js"
-
-const inputv = document.getElementById("vert");
-let valor = Number(inputv.value);
-
-const inputs = document.getElementById("scale");
-let scale = Number(inputs.value);
+import {Scene, Enemie, Boss} from "./scripts/scene.js"
 
 const gl = await configuraTudo("canvas", valor, scale);
-async function loopPrincipal(){
-    valor = Number(inputv.value);
-    scale = Number(inputs.value);
-    atualizaVertices(gl, valor, scale);
-    if(valor>1) desenhaLinhas(gl, valor);
+const textura1 = await carregarTextura(gl, "./imagens/alphonse.png");
+let scene = new Scene;
+let enemies = [
+    new Enemie({x:0,y:0},{x:0,y:0},{x:30,y:30}), // (pos, velocity, size)
+    new Enemie({x:20,y:0},{x:0,y:0},{x:30,y:30}),
+    new Enemie({x:40,y:0},{x:0,y:0},{x:30,y:30}),
+    new Enemie({x:60,y:0},{x:0,y:0},{x:30,y:30}),
+    new Enemie({x:80,y:0},{x:0,y:0},{x:30,y:30}),
+    new Enemie({x:100,y:0},{x:0,y:0},{x:30,y:30})
+];
+scene.enemies = enemies;
+while(dialog.still_dialog){
+
+let dialog = scene.dialog();
+}
+
+async function loopPrincipal(dt){
+    scene.update(dt, gl.width, gl.height);
     requestAnimationFrame(loopPrincipal);
 }
 requestAnimationFrame(loopPrincipal);

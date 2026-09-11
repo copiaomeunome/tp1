@@ -11,6 +11,31 @@ class Protagonista{
         this.isMoving = {up:false, down:false, left:false, right:false} // está se movendo?
     }
 }
+class Boss{
+    constructor(pos, size){
+        this.pos = pos;
+        this.size = size;
+    }
+    attack(){
+        return {};// bloco de ataque e sprite atual do ataque
+    }
+}
+
+export class Enemie{
+    constructor(pos, velocity, size){
+        this.pos=pos;
+        this.velocity=velocity;
+        this.size = size;
+    }
+    update_position(dt){
+        this.pos.x=this.velocitiy.x*dt;
+        this.pos.y=this.velocitiy.y*dt;
+    }
+    update_velocity(target, width, height){
+        this.velocity.x=(this.pos.x+target.pos.x)/width;
+        this.velocity.y=(this.pos.y+target.pos.y)/width;
+    }
+}
 
 let protagonista = new Protagonista;
 export class Scene{
@@ -21,24 +46,34 @@ export class Scene{
         this.enemies = [];
         this.walls = [];
         this.towers = [];
+        this.main_tower={};
     }
-    update() {
+    update(dt, width, height) {
+        for(let enemie of this.enemies){
+            enemie.update_position(dt);
+            enemie.update_velocity(main_tower,width,height);
+        }
         if (protagonista.isMoving.up)
-            protagonista.pos.y += protagonista.velocity.y;
+            protagonista.pos.y += protagonista.velocity.y*dt;
         if (protagonista.isMoving.down)
-            protagonista.pos.y -= protagonista.velocity.y;
+            protagonista.pos.y -= protagonista.velocity.y*dt;
         if (protagonista.isMoving.left)
-            protagonista.pos.x -= protagonista.velocity.x;
+            protagonista.pos.x -= protagonista.velocity.x*dt;
         if (protagonista.isMoving.right)
-            protagonista.pos.x += protagonista.velocity.x;
+            protagonista.pos.x += protagonista.velocity.x*dt;
         return {protagonista: protagonista,walls: this.walls,enemies: this.enemies, towers: this.towers};
     }
     async dialog(){
         const json = await fetch(`../dialogs/dialog${this.level}.json`).json();
         let dialog = json.dialogs[this.dialog_position];
         this.dialog_position++;
-        if(json.dialogs.size()==this.dialog_position) this.dialog_position = 0;
-        return dialog;
+        let still_dialog = true;
+        if(json.dialogs.size()+1==this.dialog_position){
+            this.dialog_position = 0;
+            this.still_dialog = false;
+        }
+        
+        return {dialog:dialog, still_dialog:still_dialog};
     }
 }
 document.addEventListener("keydown", (event) => {
