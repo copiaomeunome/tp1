@@ -48,7 +48,7 @@ export async function configuraTudo(){                                          
     // }
     // const vertices = new Float32Array(vetor);
     const menorDim = Math.min(canvas.width, canvas.height);                                          // define o quadrado do centro e as posições centrais
-    const lQuadrado = menorDim/3;
+    const lQuadrado = 112; // NÃO MEXA AQUI, JA MEXI 500X E QUEBRA AS ANIMAÇÕES
 
     const vertices = new Float32Array([
         lQuadrado,  lQuadrado,
@@ -95,26 +95,40 @@ export async function configuraTudo(){                                          
     gl.bindVertexArray(vao);
 
     const textureLocation = gl.getUniformLocation(program, "u_texture");
-    return {gl,modelLocation, textureLocation, width:canvas.width, height:canvas.height};
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    return {gl,modelLocation,textureLocation,texCoordBuffer,vao,width: canvas.width,height: canvas.height};
 }
 
-export function desenhaCena({gl,modelLocation, textureLocation}, squares_vector) {
-    const menorDim = Math.min(canvas.width, canvas.height);                                          // define o quadrado do centro e as posições centrais
-    const lQuadrado = menorDim/3;
-    for(let square of squares_vector){
-        const color = square.texture;
-        gl.bindbuffer(gl.ARRAY_BUFFER,vboColor)
-        gl.bufferData(gl.ARRAY_BUFFER,color,gl.STATIC_DRAW);
-        const tx = quadrado.tx;
-        const ty = square.ty;
+export function desenhaCena({gl, modelLocation, textureLocation, texCoordBuffer, vao},entidades){
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindVertexArray(vao);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform1i(textureLocation, 0);
+
+    for (const entidade of entidades) {
+        gl.bindTexture(gl.TEXTURE_2D, entidade.texture);
+
+        const u0 = (entidade.quadro-1)/entidade.totalQuadros;
+        const u1 = entidade.quadro/entidade.totalQuadros;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array([
+            u1, 0,
+            u1, 1,
+            u0, 0,
+            u0, 1
+        ]));
+
         const model = new Float32Array([
-            1,  0,  0,  0,
-            0,  1,  0,  0,
-            0,  0,  1,  0,
-            tx, ty, 0,  1
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            entidade.pos.x, entidade.pos.y, 0, 1
         ]);
-        gl.uniformMatrix4fv(modelLocation,false,model);
-        gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+        gl.uniformMatrix4fv(modelLocation, false, model);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 }
 function ortho(left, right, bottom, top, near, far) {                                               // função de projeção ortográfica, transforma o sistema de coordenadas de [-1,1] [-1,1] nos valores passados
