@@ -11,7 +11,6 @@ export function createShader(gl, type, source){
 // ----------------------
 const canvas = document.getElementById('canvas');
 export async function configuraTudo(){                                               // instanciando canvas e webGL
-    const projection = ortho(0,canvas.width,0,canvas.height,-1,1);
     const gl = canvas.getContext('webgl2');
     if (!gl) {
         console.error('WebGL2 não está disponível');
@@ -68,7 +67,7 @@ export async function configuraTudo(){                                          
     const positionAttributeLocation = gl.getAttribLocation(program, 'position');                    // pega o atributo 'position' dentro do GLSL do vertexShader e seta ele como (posição, tamanho, float, normalizado?, stride (se tem intervalo entre o fim de um vértice e o início do próximo), offset)
     gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionAttributeLocation);
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);                                                              // fundo branco
+    gl.clearColor(0.65,0.85,0.55,1);                                                            // fundo verde claro
 
     const texCoords = new Float32Array([
         1, 0,
@@ -87,8 +86,15 @@ export async function configuraTudo(){                                          
     gl.enableVertexAttribArray(texCoordLocation);
 
     const projectionLocation = gl.getUniformLocation(program, "projection");                        // projeção ortogonal das posições
-    gl.uniformMatrix4fv(projectionLocation,false,projection);
-
+    function resize_canvas(){
+        canvas.width=window.innerWidth;
+        canvas.height=window.innerHeight;
+        gl.viewport(0,0,canvas.width,canvas.height);
+        gl.useProgram(program);
+        gl.uniformMatrix4fv(projectionLocation,false,ortho(0,canvas.width,0,canvas.height,-1,1));
+    }
+    window.addEventListener("resize",resize_canvas);
+    resize_canvas();
     const modelLocation = gl.getUniformLocation(program, "model");                                  // translação e rotação das posições
 
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -120,11 +126,14 @@ export function desenhaCena({gl, modelLocation, textureLocation, texCoordBuffer,
             u0, 1
         ]));
 
-        const model = new Float32Array([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            entidade.pos.x, entidade.pos.y, 0, 1
+        const scale=entidade.scale??1;
+        const angle=entidade.angle??0;
+        const c=Math.cos(angle)*scale,s=Math.sin(angle)*scale;
+        const model=new Float32Array([
+            c,s,0,0,
+            -s,c,0,0,
+            0,0,1,0,
+            entidade.pos.x+56-56*c+56*s,entidade.pos.y+56-56*s-56*c,0,1
         ]);
 
         gl.uniformMatrix4fv(modelLocation, false, model);

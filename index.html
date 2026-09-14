@@ -4,9 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        html,body{margin:0;width:100%;height:100%;overflow:hidden}
+        canvas{display:block;width:100%;height:100%}
+        #container{position:relative;width:100%;height:100%}
+        #text-overlay{position:absolute;inset:0;pointer-events:none}
+        .screen{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#183522ed;color:white;font-family:sans-serif;text-align:center;padding:24px;overflow:auto}
+        .screen[hidden],#tips[hidden]{display:none}
+        .screen button{padding:12px 28px;font-size:20px;cursor:pointer}
+        .screen button:disabled{cursor:wait}
+        #tips{max-width:520px}
+        #truth-image{display:block;width:180px;max-width:100%;height:auto;margin:0 auto 16px;image-rendering:pixelated}
+    </style>
 </head>
 <body>
-    <canvas id="canvas" width="500" height="500"></canvas>
+    <div id="container">
+        <canvas id="canvas" width="500" height="500"></canvas>
+        <canvas id="text-overlay"></canvas>
+        <div id="start-screen" class="screen">
+            <h1>Alquimia</h1>
+            <button id="start-button" type="button" disabled>Iniciar jogo</button>
+            <button id="tips-button" type="button" aria-expanded="false" aria-controls="tips">Dicas</button>
+            <div id="tips" hidden>
+                <img id="truth-image" src="./assets/truth, projectiles and effects/the_truth.png" alt="Truth">
+                <p>WASD: movimentar Alphonse.</p>
+                <p>Clique esquerdo: atirar pedras.</p>
+                <p>E: construir uma torre na posição do mouse.</p>
+                <p>Use E sobre uma torre para evoluí-la ao nível 2.</p>
+                <p>Construir ou evoluir exige esperar 20 segundos.</p>
+                <p>Proteja Shao May. Se a vida dela chegar a zero, o jogo acaba.</p>
+            </div>
+        </div>
+        <div id="game-over-screen" class="screen" hidden>
+            <h1>Game Over</h1>
+            <p>Shao May foi destruída.</p>
+        </div>
+    </div>
+    
     <script type="module" src="./script.js"></script>
 </body>
 </html>
