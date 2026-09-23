@@ -46,7 +46,7 @@ export async function configuraTudo(){                                          
     //     }
     // }
     // const vertices = new Float32Array(vetor);
-    const menorDim = Math.min(canvas.width, canvas.height);                                          // define o quadrado do centro e as posições centrais
+    // define o quadrado do centro e as posições centrais
     const lQuadrado = 112; // NÃO MEXA AQUI, JA MEXI 500X E QUEBRA AS ANIMAÇÕES
 
     const vertices = new Float32Array([
@@ -103,7 +103,7 @@ export async function configuraTudo(){                                          
     const textureLocation = gl.getUniformLocation(program, "u_texture");
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    return {gl,modelLocation,textureLocation,texCoordBuffer,vao,width: canvas.width,height: canvas.height};
+    return {gl,modelLocation,textureLocation,texCoordBuffer,vao};
 }
 
 export function desenhaCena({gl, modelLocation, textureLocation, texCoordBuffer, vao},entidades){

@@ -1,9 +1,3 @@
-const status = {
-    DIALOGO:0,
-    CUTSCENE:1,
-    GAMEPLAY:2
-};
-
 class Protagonista{
     constructor(){
         this.animacao = 1;
@@ -14,26 +8,20 @@ class Protagonista{
         this.velocity={x:120,y:120}; // velocidade
         this.isMoving = {up:false, down:false, left:false, right:false} // está se movendo?
         this.radius = 20; // Circular hitbox radius.
+        this.fireShot=false;
+        this.iceCollected=false;
         this.center = {x:this.pos.x+(this.size.x/2), y:this.pos.y+(this.size.y/2)};
         
     }
 }
-class Boss{
-    constructor(pos, size){
-        this.pos = pos;
-        this.size = size;
-    }
-    attack(){
-        return {};// bloco de ataque e sprite atual do ataque
-    }
-}
+// bloco de ataque e sprite atual do ataque
 const enemyTypes={
-    envy:{totalQuadros:25,idle:1,idleCount:1,left:10,right:6,up:14,down:2,death:18,attack:{down:22,right:22,left:22,up:22}},
+    envy:{totalQuadros:25,idle:1,idleCount:1,left:10,right:6,up:14,down:2,death:18,attackCount:1,attack:{down:1,right:1,left:1,up:1}},
     immortal_soldier:{totalQuadros:32,idle:1,idleCount:4,left:9,right:5,up:13,down:17,death:null,attack:{down:21,right:29,left:25,up:21}}
 };
 const stages=[
-    {count:20,spawnInterval:3,enemyHealth:15,boss:"envy",bossHealth:20},
-    {count:20,spawnInterval:3,enemyHealth:15,boss:"envy",bossHealth:20}
+    {count:20,spawnInterval:5,enemyHealth:10,boss:"envy",bossHealth:20},
+    {count:20,spawnInterval:5,enemyHealth:10,boss:"envy",bossHealth:20}
 ];
 export class Enemy{
     constructor(pos,velocity,size,type="immortal_soldier"){
@@ -53,10 +41,11 @@ export class Enemy{
         this.radius = 20;
         this.center = {x:this.pos.x+(this.size.x/2), y:this.pos.y+(this.size.y/2)};
         this.speed = 40;  //px/s
-        this.health=type==="envy"?20:15;
+        this.health=type==="envy"?20:10;
         this.maxHealth=this.health;
         this.damage=type==="envy"?2:1;
         this.burnTime=0;
+        this.slowTime=0;
         this.burnAnimationTime=0;
         this.deathTime=0;
         this.burnDamageTime=0;
@@ -70,6 +59,7 @@ export class Enemy{
             this.quadro=this.frames.death??this.frames.idle;
             this.deathTime=0;
             this.burnTime=0;
+            this.slowTime=0;
             this.isAttacking=false;
             this.attackTarget=null;
             this.attackTime=0;
@@ -93,7 +83,7 @@ export class Enemy{
             return;
         }
         // stop when hit the target without overshooting
-        const speed=Math.min(this.speed,gap/dt);
+        const speed=Math.min(this.speed*(this.slowTime>0?0.5:1),gap/dt);
 
         this.velocity.x = (dx/distance)*speed;
         this.velocity.y= (dy/distance)*speed;
@@ -127,7 +117,7 @@ export class Enemy{
             this.animationTime = 0;
         }
         this.animationTime=this.isAttacking?this.attackTime:this.animationTime+dt;
-        const frameCount = start===this.frames.idle?this.frames.idleCount:4;
+        const frameCount = this.isAttacking?(this.frames.attackCount??4):start===this.frames.idle?this.frames.idleCount:4;
         this.quadro = start+Math.floor(this.animationTime/0.25)%frameCount;
     }
 }
@@ -171,11 +161,8 @@ export class Scene{
         this.spawnIndex=0;
         this.buildCooldown=0;
         this.playerShotCooldown=0;
-        this.status = status.DIALOGO;
-        this.level = 0;
-        this.dialog_position = 0;
         this.enemies = [];
-        this.walls = [];
+        this.drops=[];
         this.towers = [];
         this.main_tower = {
             health:10,
@@ -202,13 +189,14 @@ export class Scene{
         const enemy=new Enemy(pos,{x:0,y:0},{x:112,y:112},type); // (pos, velocity, size)
         enemy.health=health;
         enemy.maxHealth=health;
+        if(type==="envy")enemy.dropType=this.stageIndex===0?"fire":"ice";
         this.enemies.push(enemy);
     }
     update_spawns(dt,width,height){
-        if(this.wave!=="swarm")return;
+        if(this.wave!=="swarm" && this.wave!=="endless")return;
         this.waveTime+=dt;
         const stage=stages[this.stageIndex];
-        while(this.spawnIndex<this.spawnTimes.length && this.waveTime>=this.spawnTimes[this.spawnIndex]){
+        while(this.wave==="endless"?this.waveTime>=3:this.spawnIndex<this.spawnTimes.length && this.waveTime>=this.spawnTimes[this.spawnIndex]){
             const side=Math.floor(Math.random()*4);
             let pos;
             if(side===0)pos={x:-144,y:Math.random()*Math.max(0,height-112)};
@@ -216,11 +204,12 @@ export class Scene{
             else if(side===2)pos={x:Math.random()*Math.max(0,width-112),y:-144};
             else pos={x:Math.random()*Math.max(0,width-112),y:height+32};
             this.spawn_enemy(pos,"immortal_soldier",stage.enemyHealth);
-            this.spawnIndex++;
+            if(this.wave==="endless")this.waveTime-=3;
+            else this.spawnIndex++;
         }
     }
     update_stage_progress(width,height){
-        if(!this.running || this.spawnIndex<this.spawnTimes.length || this.enemies.some(enemy=>enemy.health>0))return;
+        if(!this.running || this.wave==="endless" || this.spawnIndex<this.spawnTimes.length || this.enemies.some(enemy=>enemy.health>0))return;
         if(this.wave==="swarm"){
             this.wave="boss";
             const stage=stages[this.stageIndex];
@@ -230,10 +219,9 @@ export class Scene{
             this.spawn_enemy({x:width+256,y:Math.max(0,(height-112)/2)},stage.boss,stage.bossHealth);
         }else if(this.stageIndex+1<stages.length){
             this.start_stage(this.stageIndex+1);
-        }else if(this.enemies.length===0){
-            this.victory=true;
-            this.running=false;
-            this.cast=null;
+        }else{
+            this.wave="endless";
+            this.waveTime=0;
         }
     }
     restart_game(){
@@ -246,19 +234,22 @@ export class Scene{
         for(const direction of Object.keys(protagonista.isMoving)){
             protagonista.isMoving[direction]=false;
         }
-        this.status=status.GAMEPLAY;
         this.running=true;
         this.start_stage(0);
     }
-    start_cast(pos){        //castar alquimia nao pode se sobrepor
+    start_cast(pos,type="basic"){        //castar alquimia nao pode se sobrepor
         if(!this.running || this.cast)return;
+        if(!["basic","fire","ice"].includes(type))return;
+        if(type==="fire" && !protagonista.fireShot)return;
+        if(type==="ice" && !protagonista.iceCollected)return;
         const candidate={center:{x:pos.x+56,y:pos.y+56},radius:20};
+        if(type==="basic" && [this.main_tower,...this.towers].some(tower=>Math.hypot(candidate.center.x-tower.center.x,candidate.center.y-tower.center.y)<112))return;
         
         if(collision(candidate,this.main_tower))return;
         const target=this.towers.find(tower=>collision(candidate,tower));
-        if(target && target.level===2)return;
+        if(type==="basic"?target:!target || target.level!==1)return;
         if(this.buildCooldown>0)return;
-        this.cast={pos:{...(target?target.pos:pos)},time:0,target};
+        this.cast={pos:{...(target?target.pos:pos)},time:0,target,type};
         protagonista.quadro=21;
     }
     spawn_projectile(origin,target,frame){
@@ -269,14 +260,14 @@ export class Scene{
             angle:frame===1?0:Math.atan2(dy,dx),
             center:{...origin},pos:{x:origin.x-56,y:origin.y-56},
             velocity:{x:dx/distance*300,y:dy/distance*300},
-            radius:6,quadro:frame,damage:1,burning:frame===3
+            radius:6,quadro:frame,damage:1,burning:frame===2 || frame===4,slowing:frame===5
         });
     }
     shoot(target){
         if(!this.running || this.cast || this.playerShotCooldown>0)return;
         update_center(protagonista);
         if(target.x===protagonista.center.x && target.y===protagonista.center.y)return;
-        this.spawn_projectile(protagonista.center,target,1);
+        this.spawn_projectile(protagonista.center,target,protagonista.fireShot?2:1);
         this.playerShotCooldown=0.3;
     }
     update_combat(dt,width,height){
@@ -295,7 +286,7 @@ export class Scene{
             if(!target)continue;
             tower.facing=target.center.x<tower.center.x?"left":"right";
             if(tower.shotCooldown===0){
-                this.spawn_projectile(tower.center,target.center,tower.level===2?3:2);
+                this.spawn_projectile(tower.center,target.center,tower.type==="ice"?5:tower.type==="fire"?4:3);
                 tower.shotCooldown=1;
             }
         }
@@ -315,6 +306,7 @@ export class Scene{
             }
             if(target){
                 target.take_damage(projectile.damage);
+                if(projectile.slowing && target.health>0)target.slowTime=3;
                 if(projectile.burning && target.health>0 && target.burnTime===0){
                     target.burnTime=Infinity;
                     target.burnAnimationTime=0;
@@ -326,6 +318,23 @@ export class Scene{
             projectile.pos.x=end.x-56;
             projectile.pos.y=end.y-56;
             return end.x>=-56 && end.x<=width+56 && end.y>=-56 && end.y<=height+56;
+        });
+    }
+    update_drops(dt,width,height){
+        for(const enemy of this.enemies){
+            if(enemy.type!=="envy" || enemy.health>0 || enemy.dropped)continue;
+            enemy.dropped=true;
+            this.drops.push({center:{
+                x:Math.max(16,Math.min(width-16,enemy.center.x)),
+                y:Math.max(18,Math.min(height-18,enemy.center.y))
+            },radius:16,type:enemy.dropType??"fire",angle:0});
+        }
+        this.drops=this.drops.filter(drop=>{
+            drop.angle=(drop.angle+dt*Math.PI)%(Math.PI*2);
+            if(!collision(protagonista,drop))return true;
+            if(drop.type==="fire")protagonista.fireShot=true;
+            else protagonista.iceCollected=true;
+            return false;
         });
     }
     update_enemy_attacks(dt){
@@ -377,6 +386,7 @@ export class Scene{
                 if(enemy.frames.death!==null)enemy.quadro=enemy.frames.death+Math.min(3,Math.floor(enemy.deathTime/0.25));
                 continue;
             }
+            enemy.slowTime=Math.max(0,enemy.slowTime-dt);
             if(enemy.burnTime>0){
                 enemy.burnAnimationTime+=dt;
                 enemy.burnDamageTime+=dt;
@@ -407,6 +417,12 @@ export class Scene{
         }
         this.enemies=this.enemies.filter(enemy=>enemy.health>0 || (enemy.frames.death!==null && enemy.deathTime<1));
         for(const tower of this.towers)tower.spawnTime+=dt;
+        if(this.cast?.target && this.cast.target.health<=0){
+            this.cast=null;
+            protagonista.animacao=1;
+            protagonista.tempoAnimacao=0;
+            protagonista.quadro=1;
+        }
         if(this.cast){
             this.cast.time+=dt;
             protagonista.quadro=21+Math.min(4,Math.floor(this.cast.time/0.25));
@@ -414,15 +430,16 @@ export class Scene{
                 const target=this.cast.target;
                 if(target){
                     target.level=2;
+                    target.type=this.cast.type;
                     target.health=15;
                     target.maxHealth=15;
-                    target.quadro=2;
+                    target.quadro=target.type==="ice"?3:2;
                     target.spawnTime=0;
                 }else{
                     const pos={...this.cast.pos};
                     this.towers.push({
                         pos,size:{x:112,y:112},center:{x:pos.x+56,y:pos.y+56},
-                        radius:20,level:1,health:10,maxHealth:10,facing:"right",quadro:1,spawnTime:0
+                        radius:20,level:1,type:"basic",health:10,maxHealth:10,facing:"right",quadro:1,spawnTime:0
                     });
                     
                 }
@@ -459,31 +476,18 @@ export class Scene{
         protagonista.pos.x=Math.max(0,Math.min(width-protagonista.size.x,protagonista.pos.x));
         protagonista.pos.y=Math.max(0,Math.min(height-protagonista.size.y,protagonista.pos.y));
         update_center(protagonista);
-        update_center(this.main_tower);
-
-        for(const tower of this.towers)update_center(tower);
-        for(const enemy of this.enemies)update_center(enemy);
-        for(const enemy of this.enemies){
-            if(enemy.health<=0)continue;
-            if(collision(protagonista, enemy)){
-                // Handle contact with the protagonist.
-            }
-            if (collision(this.main_tower, enemy)) {
-                // Handle contact with Shao May.
-            }
-            for (const tower of this.towers) {
-                if (collision(tower, enemy)) {
-                    // Handle contact with the summoned tower.
-                }
-            }
-        }
+        // Handle contact with the protagonist.
+        // Handle contact with Shao May.
+        // Handle contact with the summoned tower.
         this.update_enemy_attacks(dt);
         if(this.main_tower.health<=0){
             this.running=false;
-            this.gameOver=true;
+            this.victory=this.wave==="endless";
+            this.gameOver=!this.victory;
             this.cast=null;
         }else{
             this.update_combat(dt,width,height);
+            this.update_drops(dt,width,height);
         }
         for(const enemy of this.enemies){
             if(enemy.isAttacking && enemy.attackTarget.health<=0){
@@ -495,28 +499,15 @@ export class Scene{
         }
         this.update_stage_progress(width,height);
         const attackEffects=this.enemies.filter(enemy=>enemy.health>0 && enemy.isAttacking).map(enemy=>enemy.attack_effect());
-        const summonEffects=this.towers.filter(tower=>tower.spawnTime<0.5).map(tower=>({pos:tower.pos,quadro:3}));
+        const summonEffects=this.towers.filter(tower=>tower.spawnTime<0.5).map(tower=>({pos:tower.pos,quadro:4}));
         if(this.cast?.target && this.cast.target.health<=0){
             this.cast=null;
             protagonista.animacao=1;
             protagonista.tempoAnimacao=0;
             protagonista.quadro=1;
         }
-        if(this.cast)summonEffects.push({pos:this.cast.pos,quadro:3});
-        return {protagonista,walls:this.walls,enemies:this.enemies,towers:this.towers,main_tower:this.main_tower,summonEffects,projectiles:this.projectiles,attackEffects};
-    }
-    async dialog(){
-        const response = await fetch(`./dialogs/dialog${this.level}.json`);
-        const json = await response.json();
-        let dialog = json.dialogs[this.dialog_position];
-        this.dialog_position++;
-        let still_dialog = true;
-        if(this.dialog_position >= json.dialogs.length){
-            this.dialog_position = 0;
-            still_dialog = false;
-        }
-        
-        return {dialog:dialog, still_dialog:still_dialog};
+        if(this.cast)summonEffects.push({pos:this.cast.pos,quadro:4});
+        return {protagonista,enemies:this.enemies,towers:this.towers,main_tower:this.main_tower,summonEffects,projectiles:this.projectiles,attackEffects,drops:this.drops};
     }
 }
 document.addEventListener("keydown", (event) => {
