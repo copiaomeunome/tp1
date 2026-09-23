@@ -1,30 +1,45 @@
 import {configuraTudo, desenhaCena, carregarTextura} from "./scripts/draw.js"
-import {Scene, Enemy} from "./scripts/scene.js"
+import {Scene} from "./scripts/scene.js"
 
 const gl = await configuraTudo(); //"canvas", valor, scale
 const texturaAlphonse = await carregarTextura(gl.gl, "./assets/alphonse/alphonse.png"); //carregamento das textures
 const texturaShaoMay = await carregarTextura(gl.gl, "./assets/towers/shao may.png");
-const envyTexture = await carregarTextura(gl.gl,"./assets/envy/envy.png");
+const envyTexture = await carregarTextura(gl.gl,"./assets/enemies/envy.png");
+const soldierTexture=await carregarTextura(gl.gl,"./assets/enemies/immortal_soldier.png");
+const enemyTextures={envy:envyTexture,immortal_soldier:soldierTexture};
 const effectsTexture=await carregarTextura(gl.gl,"./assets/truth, projectiles and effects/projectiles and effects.png");
+const attackTexture=await carregarTextura(gl.gl,"./assets/truth, projectiles and effects/attack.png");
 let scene = new Scene;
 const towerTexture=await carregarTextura(gl.gl,"./assets/towers/tower.png");
 const canvas=document.getElementById("canvas");     //puta que pariu tem mt config, tenho que colocar isso depois em outro import, penso em um json
 const textCanvas=document.getElementById("text-overlay");
 const textContext=textCanvas.getContext("2d");
+const healthBarImage=new Image();
+healthBarImage.src="./assets/truth, projectiles and effects/health_bar.png";
+await healthBarImage.decode();
 function draw_health(state){
     if(textCanvas.width!==canvas.width || textCanvas.height!==canvas.height){
         textCanvas.width=canvas.width;
         textCanvas.height=canvas.height;
     }
     textContext.clearRect(0,0,textCanvas.width,textCanvas.height);
-    textContext.font="bold 16px monospace";
+    textContext.imageSmoothingEnabled=false;
+    textContext.font="bold 12px monospace";
     textContext.fillStyle="black";
     textContext.textAlign="center";
-    textContext.textBaseline="top";
-    for(const tower of [state.main_tower,...state.towers]){
-        const x=tower.pos.x+tower.size.x/2;
-        const y=Math.min(textCanvas.height-20,textCanvas.height-tower.pos.y+4);
-        textContext.fillText(String(tower.health),x,y);
+    textContext.textBaseline="middle";
+    for(const entity of [state.main_tower,...state.towers,...state.enemies,state.protagonista]){
+        if(!Number.isFinite(entity.health) || entity.health<=0)continue;
+        if(entity.pos.x+entity.size.x<=0 || entity.pos.x>=canvas.width || entity.pos.y+entity.size.y<=0 || entity.pos.y>=canvas.height)continue;
+        const burning=entity.burnTime>0;
+        const x=Math.round(Math.max(0,Math.min(canvas.width-(burning?140:112),entity.pos.x+entity.size.x/2-56)));
+        const y=Math.round(Math.max(0,Math.min(canvas.height-56,canvas.height-entity.pos.y+4)));
+        const ratio=Math.max(0,Math.min(1,entity.health/entity.maxHealth));
+        // Crop the heart, empty bar and fill from their original pixel bounds.
+        textContext.drawImage(healthBarImage,0,25,112,40,x,y,112,40);
+        if(ratio>0)textContext.drawImage(healthBarImage,117,37,102*ratio,23,x+5,y+12,102*ratio,23);
+        if(burning)textContext.drawImage(healthBarImage,244,1,67,78,x+116,y+9,24,28);
+        textContext.fillText(String(entity.health),x+56,y+49);
     }
 }
 canvas.addEventListener("click",event=>{
@@ -50,15 +65,6 @@ document.addEventListener("keydown",event=>{
     const y=mouse.inside?Math.max(0,Math.min(canvas.height-112,mouse.y-56)):0;
     scene.start_cast({x,y});
 });
-let enemies = [
-    new Enemy({x:0,y:0},{x:0,y:0},{x:112,y:112}), // (pos, velocity, size)
-    new Enemy({x:20,y:0},{x:0,y:0},{x:112,y:112}),
-    new Enemy({x:40,y:0},{x:0,y:0},{x:112,y:112}),
-    new Enemy({x:60,y:0},{x:0,y:0},{x:112,y:112}),
-    new Enemy({x:80,y:0},{x:0,y:0},{x:112,y:112}),
-    new Enemy({x:100,y:0},{x:0,y:0},{x:112,y:112})
-];
-scene.enemies = enemies;
 // while(dialog.still_dialog){
 
 // let dialog = scene.dialog();
@@ -82,6 +88,21 @@ tipsButton.addEventListener("click",()=>{
     tips.hidden=!tips.hidden;
     tipsButton.setAttribute("aria-expanded",String(!tips.hidden));
 });
+const restartButton=document.getElementById("restart-button");
+restartButton.addEventListener("click",()=>{
+    if(!scene.gameOver && !scene.victory)return;
+    scene.restart_game();
+    gameOverScreen.hidden=true;
+    startScreen.hidden=true;
+    tips.hidden=true;
+    tipsButton.setAttribute("aria-expanded","false");
+    mouse.x=0;
+    mouse.y=0;
+    mouse.inside=false;
+    dtAntigo=undefined;
+    textContext.clearRect(0,0,textCanvas.width,textCanvas.height);
+    restartButton.blur();
+});
 
 function loopPrincipal(time) {
     if(!scene.running){
@@ -97,7 +118,7 @@ function loopPrincipal(time) {
     desenhaCena(gl,[
         {...state.main_tower,texture:texturaShaoMay,totalQuadros:4},
         {...state.protagonista,texture:texturaAlphonse,totalQuadros:25},
-        ...state.enemies.map(enemy=>({...enemy,texture:envyTexture,totalQuadros:21})),
+        ...state.enemies.filter(enemy=>enemy.health>0 || enemy.frames.death!==null).map(enemy=>({...enemy,texture:enemyTextures[enemy.type],totalQuadros:enemy.totalQuadros})),
         ...state.summonEffects.map(effect=>({...effect,texture:towerTexture,totalQuadros:7})),
         ...state.towers.flatMap(tower=>{                // desenhando as armas junto
             const sprite={...tower,texture:towerTexture,totalQuadros:7,scale:Math.min(1,tower.spawnTime/0.25)};
@@ -105,13 +126,18 @@ function loopPrincipal(time) {
             return [sprite,{...sprite,quadro:weaponFrame}];
         }),
         ...state.projectiles.map(projectile=>({...projectile,texture:effectsTexture,totalQuadros:6})),
+        ...state.attackEffects.map(effect=>({...effect,texture:attackTexture,totalQuadros:4})),
         ...state.enemies.filter(enemy=>enemy.health>0 && enemy.burnTime>0).map(enemy=>({
             pos:enemy.pos,quadro:4+Math.floor(enemy.burnAnimationTime/0.5)%3,
             texture:effectsTexture,totalQuadros:6
         })),
     ]);
     draw_health(state);
-    if(scene.gameOver)gameOverScreen.hidden=false;
+    if(scene.gameOver || scene.victory){
+        gameOverScreen.querySelector("h1").textContent=scene.victory?"Vitória!":"Game Over";
+        gameOverScreen.querySelector("p").textContent=scene.victory?"Você completou as duas fases.":"Shao May foi destruída.";
+        gameOverScreen.hidden=false;
+    }
     requestAnimationFrame(loopPrincipal);
 }
 requestAnimationFrame(loopPrincipal);

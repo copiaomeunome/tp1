@@ -25,10 +25,10 @@ Spritesheet: 2800x112px
 [17,20] Andando para cima
 [21,25] Conjurando alquimia
 
-ENVY — INIMIGO QUE APARECE EM ENXAME
-Arquivo: envy.png
-Spritesheet: 2352x112px
-21 quadros
+ENVY — BOSS (UMA VEZ POR FASE; DUAS FASES POR ENQUANTO)
+Arquivo: enemies/envy.png
+Spritesheet: 2800x112px
+25 quadros
 
 [1]     Idle
 [2,5]   Andando para baixo
@@ -36,6 +36,30 @@ Spritesheet: 2352x112px
 [10,13] Andando para a esquerda
 [14,17] Andando para cima
 [18,21] MMorte
+[22,25] Ataque
+
+Por enquanto, persegue e ataca a torre mais próxima, assim como o Immortal Soldier.
+Ao encostar na torre, reproduz [22,25] e mostra o efeito attack à sua frente.
+
+IMMORTAL SOLDIER — INIMIGO QUE APARECE EM ENXAME
+Arquivo: enemies/immortal_soldier.png
+Spritesheet: 3584x112px
+32 quadros
+
+[1,4]   Idle
+[5,8]   Andando para a direita
+[9,12]  Andando para a esquerda
+[13,16] Andando para cima
+[17,20] Andando para baixo
+[21,24] Atacando para baixo
+[25,28] Atacando para a esquerda
+[29,32] Atacando para a direita
+
+Por enquanto, persegue e ataca a torre mais próxima, assim como o Envy.
+Ao encostar na torre, reproduz a animação de ataque da direção correspondente.
+Não há ataque para cima: provisoriamente usa [21,24], com o efeito apontando para cima.
+Não há quadros de morte
+mapeados nesta spritesheet; não reutilizar [18,21] do Envy para este inimigo.
 
 SHAO MAY — TORRE PRINCIPAL
 Arquivo: shao may.png
@@ -66,3 +90,13 @@ Spritesheet: 672x112 pixels
 [2]   Projétil disparado pela torre invocada de nível 1
 [3]   Projétil disparado pela torre de nível 2. Aplica queimadura
 [4,6] Animação de queimadura, exibida ao aplicar queimadura
+
+ATAQUE — EFEITO
+Arquivo: attack.png
+Spritesheet: 448x112px
+4 quadros
+
+[1,4] Animação de ataque
+Reproduzida à frente do inimigo durante o ataque, com 0,25 s por quadro.
+O efeito original aponta para a direita e é rotacionado conforme a direção do inimigo.
+O dano continua independente: 1 ponto a cada 0,5 s de contato.
