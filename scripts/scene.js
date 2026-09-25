@@ -1,3 +1,5 @@
+import {play_sound} from "./audio.js";
+
 class Protagonista{
     constructor(){
         this.animacao = 1;
@@ -16,16 +18,22 @@ class Protagonista{
 }
 // bloco de ataque e sprite atual do ataque
 const enemyTypes={
+    gluttony:{totalQuadros:14,idle:1,idleCount:1,left:6,right:6,up:6,down:6,death:null,attackCount:5,attack:{down:1,right:1,left:1,up:1}},
     envy:{totalQuadros:25,idle:1,idleCount:1,left:10,right:6,up:14,down:2,death:18,attackCount:1,attack:{down:1,right:1,left:1,up:1}},
     immortal_soldier:{totalQuadros:32,idle:1,idleCount:4,left:9,right:5,up:13,down:17,death:null,attack:{down:21,right:29,left:25,up:21}}
 };
 const stages=[
-    {count:20,spawnInterval:5,enemyHealth:10,boss:"envy",bossHealth:20},
-    {count:20,spawnInterval:5,enemyHealth:10,boss:"envy",bossHealth:20}
+    {count:20,spawnInterval:5,enemyHealth:10,boss:"envy",bossHealth:45},
+    {count:20,spawnInterval:5,enemyHealth:10,boss:"gluttony",bossHealth:45}
 ];
 export class Enemy{
     constructor(pos,velocity,size,type="immortal_soldier"){
         this.type=type;
+        this.isBoss=type==="envy" || type==="gluttony";
+        this.scale=this.isBoss?1.5:1;
+        this.attackCooldown=0;
+        this.attackRange=type==="gluttony"?260:0;
+        this.attackPos=null;
         this.frames=enemyTypes[type];
         this.totalQuadros=this.frames.totalQuadros;
         this.attackTime=0;
@@ -41,9 +49,9 @@ export class Enemy{
         this.radius = 20;
         this.center = {x:this.pos.x+(this.size.x/2), y:this.pos.y+(this.size.y/2)};
         this.speed = 40;  //px/s
-        this.health=type==="envy"?20:10;
+        this.health=this.isBoss?45:10;
         this.maxHealth=this.health;
-        this.damage=type==="envy"?2:1;
+        this.damage=type==="gluttony"?5:type==="envy"?2:1;
         this.burnTime=0;
         this.slowTime=0;
         this.burnAnimationTime=0;
@@ -53,6 +61,7 @@ export class Enemy{
     take_damage(amount){
         if(this.health<=0)return;
         this.health=Math.max(0,this.health-amount);
+        play_sound(this.health===0?"enemy_death":"hit");
         if(this.health===0){
             this.velocity.x=0;
             this.velocity.y=0;
@@ -75,9 +84,9 @@ export class Enemy{
         const dx = target.center.x-this.center.x;
         const dy = target.center.y-this.center.y;
         const distance = Math.hypot(dx, dy);
-        const gap = distance-(this.radius+target.radius);   //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        const gap = distance-(this.attackRange || this.radius+target.radius);   //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
-        if (gap<=0 || dt<=0){
+        if (gap<=0 || dt<=0 || (this.type==="gluttony" && (this.isAttacking || this.attackCooldown>0))){
             this.velocity.x=0;
             this.velocity.y=0;
             return;
@@ -93,6 +102,10 @@ export class Enemy{
         this.facing=Math.abs(x)>Math.abs(y)?(x>0?"right":"left"):(y>0?"up":"down"); // em caso de empate vou escolher o vertical, pq? pq sim
     }
     attack_effect(){
+        if(this.type==="gluttony")return {
+            pos:{x:this.attackPos.x,y:this.attackPos.y-24},quadro:10+Math.min(4,Math.floor(this.attackTime/0.25)),
+            type:"gluttony",scale:1.5
+        };
         const directions={right:{x:1,y:0},left:{x:-1,y:0},up:{x:0,y:1},down:{x:0,y:-1}};
         const direction=directions[this.facing];
         return {
@@ -119,6 +132,36 @@ export class Enemy{
         this.animationTime=this.isAttacking?this.attackTime:this.animationTime+dt;
         const frameCount = this.isAttacking?(this.frames.attackCount??4):start===this.frames.idle?this.frames.idleCount:4;
         this.quadro = start+Math.floor(this.animationTime/0.25)%frameCount;
+    }
+    update_ranged_attack(dt){
+        if(this.health<=0)return;
+        if(this.isAttacking){
+            const previousTime=this.attackTime;
+            this.attackTime+=dt;
+            if(previousTime<0.75 && this.attackTime>=0.75 && this.attackTarget.health>0){
+                this.attackTarget.health=Math.max(0,this.attackTarget.health-this.damage);
+                play_sound("enemy_attack");
+            }
+            if(this.attackTime>=1.25){
+                this.isAttacking=false;
+                this.attackTarget=null;
+                this.attackTime=0;
+                this.attackCooldown=3;
+            }
+            return;
+        }
+        if(this.attackCooldown>0){
+            this.attackCooldown=Math.max(0,this.attackCooldown-dt);
+            return;
+        }
+        const target=this.target;
+        if(!target || target.health<=0 || Math.hypot(target.center.x-this.center.x,target.center.y-this.center.y)>this.attackRange+0.001)return;
+        this.isAttacking=true;
+        this.attackTime=0;
+        this.attackTarget=target;
+        this.attackPos={...target.pos};
+        this.velocity.x=0;
+        this.velocity.y=0;
     }
 }
 // PQ NAO EXISTE NAMESPACE NESSA LINGUAGEEEEMMMM VO ME MATAR
@@ -153,10 +196,12 @@ export class Scene{
     constructor(){
         this.running=false;
         this.gameOver=false;
+        this.enemiesDefeated=0;
         this.victory=false;
         this.stageIndex=0;
         this.wave="swarm";
         this.waveTime=0;
+        this.endlessSpawnInterval=3;
         this.spawnTimes=[];
         this.spawnIndex=0;
         this.buildCooldown=0;
@@ -189,14 +234,14 @@ export class Scene{
         const enemy=new Enemy(pos,{x:0,y:0},{x:112,y:112},type); // (pos, velocity, size)
         enemy.health=health;
         enemy.maxHealth=health;
-        if(type==="envy")enemy.dropType=this.stageIndex===0?"fire":"ice";
+        if(enemy.isBoss)enemy.dropType=type==="gluttony"?"ice":"fire";
         this.enemies.push(enemy);
     }
     update_spawns(dt,width,height){
         if(this.wave!=="swarm" && this.wave!=="endless")return;
         this.waveTime+=dt;
         const stage=stages[this.stageIndex];
-        while(this.wave==="endless"?this.waveTime>=3:this.spawnIndex<this.spawnTimes.length && this.waveTime>=this.spawnTimes[this.spawnIndex]){
+        while(this.wave==="endless"?this.waveTime>=this.endlessSpawnInterval:this.spawnIndex<this.spawnTimes.length && this.waveTime>=this.spawnTimes[this.spawnIndex]){
             const side=Math.floor(Math.random()*4);
             let pos;
             if(side===0)pos={x:-144,y:Math.random()*Math.max(0,height-112)};
@@ -204,7 +249,10 @@ export class Scene{
             else if(side===2)pos={x:Math.random()*Math.max(0,width-112),y:-144};
             else pos={x:Math.random()*Math.max(0,width-112),y:height+32};
             this.spawn_enemy(pos,"immortal_soldier",stage.enemyHealth);
-            if(this.wave==="endless")this.waveTime-=3;
+            if(this.wave==="endless"){
+                this.waveTime-=this.endlessSpawnInterval;
+                this.endlessSpawnInterval=Math.max(1,this.endlessSpawnInterval-0.1);
+            }
             else this.spawnIndex++;
         }
     }
@@ -222,6 +270,7 @@ export class Scene{
         }else{
             this.wave="endless";
             this.waveTime=0;
+            this.endlessSpawnInterval=3;
         }
     }
     restart_game(){
@@ -250,12 +299,14 @@ export class Scene{
         if(type==="basic"?target:!target || target.level!==1)return;
         if(this.buildCooldown>0)return;
         this.cast={pos:{...(target?target.pos:pos)},time:0,target,type};
+        play_sound("alchemy_cast");
         protagonista.quadro=21;
     }
     spawn_projectile(origin,target,frame){
         const dx=target.x-origin.x,dy=target.y-origin.y;
         const distance=Math.hypot(dx,dy);
         if(distance===0)return;
+        play_sound({1:"stone_shot",2:"fire_shot",3:"tower_shot",4:"fire_shot",5:"ice_shot"}[frame]);
         this.projectiles.push({
             angle:frame===1?0:Math.atan2(dy,dx),
             center:{...origin},pos:{x:origin.x-56,y:origin.y-56},
@@ -322,7 +373,7 @@ export class Scene{
     }
     update_drops(dt,width,height){
         for(const enemy of this.enemies){
-            if(enemy.type!=="envy" || enemy.health>0 || enemy.dropped)continue;
+            if(!enemy.isBoss || enemy.health>0 || enemy.dropped)continue;
             enemy.dropped=true;
             this.drops.push({center:{
                 x:Math.max(16,Math.min(width-16,enemy.center.x)),
@@ -332,6 +383,7 @@ export class Scene{
         this.drops=this.drops.filter(drop=>{
             drop.angle=(drop.angle+dt*Math.PI)%(Math.PI*2);
             if(!collision(protagonista,drop))return true;
+            play_sound(drop.type==="fire"?"fire_pickup":"ice_pickup");
             if(drop.type==="fire")protagonista.fireShot=true;
             else protagonista.iceCollected=true;
             return false;
@@ -339,6 +391,10 @@ export class Scene{
     }
     update_enemy_attacks(dt){
         for(const enemy of this.enemies){
+            if(enemy.type==="gluttony"){
+                enemy.update_ranged_attack(dt);
+                continue;
+            }
             enemy.isAttacking=false;
             const target=enemy.target;
             if(enemy.health<=0 || !target || target.health<=0){
@@ -365,6 +421,7 @@ export class Scene{
             // Hit once halfway through the animation, then rest before attacking again.
             if(previousTime<0.5 && enemy.attackTime>=0.5){
                 target.health=Math.max(0,target.health-enemy.damage);
+                play_sound("enemy_attack");
             }
             enemy.attackTime%=1.5;
             enemy.isAttacking=enemy.attackTime<1;
@@ -374,7 +431,9 @@ export class Scene{
     update(dt, width, height){
         this.update_spawns(dt,width,height);
         this.playerShotCooldown=Math.max(0,this.playerShotCooldown-dt);
+        const previousCooldown=this.buildCooldown;
         this.buildCooldown=Math.max(0,this.buildCooldown-dt);
+        if(previousCooldown>0 && this.buildCooldown===0)play_sound("cooldown_ready");
         this.main_tower.pos.x = (width-this.main_tower.size.x)/2;
         this.main_tower.pos.y = (height-this.main_tower.size.y)/2;
         update_center(this.main_tower);
@@ -415,7 +474,6 @@ export class Scene{
             enemy.update_position(dt);
             update_center(enemy);
         }
-        this.enemies=this.enemies.filter(enemy=>enemy.health>0 || (enemy.frames.death!==null && enemy.deathTime<1));
         for(const tower of this.towers)tower.spawnTime+=dt;
         if(this.cast?.target && this.cast.target.health<=0){
             this.cast=null;
@@ -428,6 +486,7 @@ export class Scene{
             protagonista.quadro=21+Math.min(4,Math.floor(this.cast.time/0.25));
             if(this.cast.time>=1.25){
                 const target=this.cast.target;
+                play_sound(target?"tower_upgrade":"tower_build");
                 if(target){
                     target.level=2;
                     target.type=this.cast.type;
@@ -490,7 +549,14 @@ export class Scene{
             this.update_drops(dt,width,height);
         }
         for(const enemy of this.enemies){
-            if(enemy.isAttacking && enemy.attackTarget.health<=0){
+            if(enemy.health<=0 && !enemy.counted){
+                enemy.counted=true;
+                this.enemiesDefeated++;
+            }
+        }
+        this.enemies=this.enemies.filter(enemy=>enemy.health>0 || (enemy.frames.death!==null && enemy.deathTime<1));
+        for(const enemy of this.enemies){
+            if(enemy.type!=="gluttony" && enemy.isAttacking && enemy.attackTarget.health<=0){
                 enemy.isAttacking=false;
                 enemy.attackTarget=null;
                 enemy.attackTime=0;

@@ -1,20 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Fullmetal Tower Defense</title>
     <style>
         html,body{margin:0;width:100%;height:100%;overflow:hidden}
         canvas{display:block;width:100%;height:100%}
         #container{position:relative;width:100%;height:100%}
         #text-overlay{position:absolute;inset:0;pointer-events:none}
         .screen{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#183522ed;color:white;font-family:sans-serif;text-align:center;padding:24px;overflow:auto}
-        .screen[hidden],#tips[hidden]{display:none}
+        .screen[hidden]{display:none}
         .screen button{padding:12px 28px;font-size:20px;cursor:pointer}
         .screen button:disabled{cursor:wait}
-        #tips{max-width:520px}
-        #truth-image{display:block;width:180px;max-width:100%;height:auto;margin:0 auto 16px;image-rendering:pixelated}
+        #tips{box-sizing:border-box;width:min(580px,calc(100% - 32px));max-height:85dvh;padding:24px;border:0;background:#f2e8ce;color:#29291f;font:15px/1.55 monospace;text-align:left}
+        #tips::backdrop{background:#07160dc9}
+        #tips header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+        #tips h2{margin:0;font-size:24px}
+        #tips h3{margin:22px 0 8px;font-size:17px}
+        #tips p{margin:8px 0}
+        #tips ul{padding-left:22px;margin:8px 0}
+        #tips li{margin:7px 0}
+        #tips button{font:inherit;background:#e1d3b0;color:#29291f;border:0;padding:6px 12px;cursor:pointer}
+        #tips button:hover{background:#cfc096}
+        #tips button:focus-visible{outline:3px solid #286844;outline-offset:3px}
+        #tips kbd{display:inline-block;font:inherit;font-weight:bold;background:#284c35;color:#fff;padding:2px 7px;border-radius:3px}
+        #truth-image{display:block;width:80px;height:auto;margin:16px auto;image-rendering:pixelated}
     </style>
 </head>
 <body>
@@ -22,26 +33,42 @@
         <canvas id="canvas" width="500" height="500"></canvas>
         <canvas id="text-overlay"></canvas>
         <div id="start-screen" class="screen">
-            <h1>Alquimia</h1>
+            <h1>Fullmetal Tower Defense</h1>
             <button id="start-button" type="button" disabled>Iniciar jogo</button>
             <button id="tips-button" type="button" aria-expanded="false" aria-controls="tips">Dicas</button>
-            <div id="tips" hidden>
-                <img id="truth-image" src="./assets/truth, projectiles and effects/the_truth.png" alt="Truth">
-                <p>WASD: movimentar Alphonse.</p>
-                <p>Clique esquerdo: atirar pedras.</p>
-                <p>E: construir uma torre na posição do mouse.</p>
-                <p>Com o mouse sobre uma torre básica, pressione 1 para evoluir para fogo ou 2 para gelo.</p>
-                <p>Fogo exige coletar o item do primeiro boss; gelo exige o item do segundo boss.</p>
-                <p>Construir ou evoluir exige esperar 20 segundos.</p>
-                <p>Proteja Shao May. Se a vida dela chegar a zero, o jogo acaba.</p>
-            </div>
         </div>
         <div id="game-over-screen" class="screen" hidden>
             <h1>Game Over</h1>
             <p>Shao May foi destruída.</p>
+            <p id="enemy-count">Inimigos derrotados: 0</p>
             <button id="restart-button" type="button">Reiniciar</button>
         </div>
     </div>
+    <dialog id="tips" aria-labelledby="tips-title">
+        <header><h2 id="tips-title">Como jogar</h2><button id="close-tips" type="button" autofocus>Fechar</button></header>
+        <img id="truth-image" src="./assets/truth, projectiles and effects/the_truth.png" alt="Truth">
+        <p>Proteja Shao May, no centro do cenário, os soldados imortais são mortais e atacam a torre mais próxima.</p>
+        <p>A única coisa desse jogo que foi feita com auxílio de IA é o readme e os sons</p>
+        <h3>Controles</h3>
+        <ul>
+            <li><kbd>W A S D</kbd>: mover Alphonse.</li>
+            <li><kbd>Clique esquerdo</kbd>: atirar na direção do mouse. Intervalo de 0,3 segundo entre tiros.</li>
+            <li><kbd>E</kbd>: construir uma torre nível 1 onde está o mouse.</li>
+            <li><kbd>1</kbd>: evoluir a torre nivel 1 no mouse para fogo.</li>
+            <li><kbd>2</kbd>: evoluir a torre nivel 1 no mouse para gelo.</li>
+        </ul>
+        <h3>Torres e alquimia</h3>
+        <p>Construir ou evoluir leva um tempo, alphonse fica parado e não atira durante o casting, depois, vc tem um cd de 20 segundos para usar novamente (a barra no canto inferior esquerdo mostra o tempo).</p>
+        <p>Deixe espaço entre as torres, vc nao consegue construir duas no mesmo lugar, incluindo Shao May, mantendo o mouse dentro do cenário para escolher o lugar.</p>
+        <p>Torres básicas têm 10 de vida, evoluídas têm 15. A evolução recupera a vida para 15 e só pode fazer uma vez por torre, elas atiram automaticamente em inimigos no range de 300 pixels.</p>
+        <h3>Fogo e gelo</h3>
+        <p>Derrote Envy (boss 1) e pegue o item de fogo dropado, alphonse vai atirar projéteis de fogo e você libera a >>EVOLUÇÃO DA TORRE<< com o botão <kbd>1</kbd>. Queimadura causa 1 de dano por segundo até o inimigo morrer,</p>
+        <p>já o Gluttony deixa o item de gelo, colete para liberar a evolução de gelo com o botão <kbd>2</kbd>, tiros de gelo reduzem a velocidade do inimigo pela metade durante 3 segundos.</p>
+        <h3>Fases e resultado</h3>
+        <p>Cada fase começa com 20 soldados imortais gerados aleatoriamente, um a cada 5 segundos, ao derrotar todos, aparecem cinco soldados pela direita e o boss atrás deles (Envy na fase 1, Gluttony na fase 2).</p>
+        <p>Envy é MELEE e da mais dano que os soldados imortais, Gluttony ataca ranged em até 260 pixels.</p>
+        <p>Se Shao May perder seus 10 pontos de vida durante as fases 1 ou 2, é derrota, mas após vencer a fase 2, você entra no modo infinito: o intervalo entre spawn de soldados imortais diminui de 3 até 1 segundo.</p>
+    </dialog>
     
     <script type="module" src="./script.js"></script>
 </body>

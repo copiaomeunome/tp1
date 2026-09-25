@@ -1,25 +1,25 @@
 Relativas à apresentação do jogo e gráficos:
 
 [feito]⭐ Texturas animadas: você pode criar animações de personagens ou cenário. Por exemplo, para inimigo andando, atacando... uma explosão, para os projéteis etc
-[não feito]💣 Efeitos de partículas para simular explosão, faíscas etc
+[feito]💣 Efeitos de partículas para simular explosão, faíscas etc
 [feito]⭐ Telas: faça um jogo completo, ou seja, implemente telas de splash screen, menu inicial, créditos, opções, game over, etc
-[não feito]🌟 Sons: Colocar efeitos sonoros e música de fundo no seu jogo
+[feito]🌟 Sons: Colocar efeitos sonoros e música de fundo no seu jogo
 [não feito]Tela cheia: faça com que seja possível colocar em tela cheia e que a razão de aspecto do jogo seja sempre mantida, independente das dimensões da janela (windowed ou full screen), mas que o jogo ocupe a maior área possível da janela e ficando centralizado
 [não feito]Trailer: em vez de um vídeo simples, faça um vídeo mais rebuscado e chamativo, potencialmente um pouco maior, com um pouco de edição
 
 Relativas aos inimigos:
 
-[em progresso]⭐ Inimigos diferentes: faça inimigos visual e mecanicamente diferentes, como com velocidades distintas, frequência de ataque, dano etc
-[em progresso]Inimigos em ondas: crie o conceito de ondas de inimigos (fases) para que o jogador possa conciliar momentos de maior tensão ou maior relaxamento (no intervalinho entre ondas). As ondas podem ser "fases curadas" e finitas, ou infinitas (com aumento de dificuldade)
+[feito]⭐ Inimigos diferentes: faça inimigos visual e mecanicamente diferentes, como com velocidades distintas, frequência de ataque, dano etc
+[feito]Inimigos em ondas: crie o conceito de ondas de inimigos (fases) para que o jogador possa conciliar momentos de maior tensão ou maior relaxamento (no intervalinho entre ondas). As ondas podem ser "fases curadas" e finitas, ou infinitas (com aumento de dificuldade)
 [não feito] Colisão entre inimigos: tome o cuidado para evitar que "um inimigo entre no outro", verificando se estão colidindo ao atualizar suas posições
 [não feito] 🍔 Caminhos dos inimigos: em vez de sempre vir de fora da tela para o centro, crie um caminho (sequência de waypoints) que os inimigos percorrem até chegar à torre principal (como a maioria dos tower defense fazem)
 
 Relativas aos recursos do jogador:
 
 [feito]⭐ Novas torres: deixe o jogador construir novas torres
-[não feito]⭐ Torres diferentes: além de haver mais de uma torre, permita ao jogador escolher dentre diferentes tipos, como por exemplo uma "torre de gelo" que deixa o inimigo mais lento, ou uma "torre canhão" que atinge uma área e pode causar dano em vários inimigos com cada tiro
+[feito]⭐ Torres diferentes: além de haver mais de uma torre, permita ao jogador escolher dentre diferentes tipos, como por exemplo uma "torre de gelo" que deixa o inimigo mais lento, ou uma "torre canhão" que atinge uma área e pode causar dano em vários inimigos com cada tiro
 [feito]⭐ Progressão da torre: permita ao jogador melhorar a(s) torre(s) eventualmente, por exemplo, aumentando sua cadência, ou seu alcance, ou seu dano etc. Uma estratégia interessante é a adotada por jogos "roguelike" ou "roguelite", que é a ideia de oferecer umas 3x opções de upgrade aleatórios ao jogador cada vez que ele tiver a oportunidade de melhorar uma torre (veja o exemplo do The Last Lighthouse)
-[não feito]Power-ups: implemente alguns meios do jogador aumentar suas chances de sobrevivência. Por exemplo, pode haver uma chance para quando um inimigo for derrotado, ele "drop" ("deixe cair") um power-up que pode ser coletado com o mouse. Pode ser um escudo de proteção que dure alguns segundos, ou um aumento temporário de dano, ou uma bomba que oblitera todos os inimigos na proximidade. Use a criatividade
+[feito]Power-ups: implemente alguns meios do jogador aumentar suas chances de sobrevivência. Por exemplo, pode haver uma chance para quando um inimigo for derrotado, ele "drop" ("deixe cair") um power-up que pode ser coletado com o mouse. Pode ser um escudo de proteção que dure alguns segundos, ou um aumento temporário de dano, ou uma bomba que oblitera todos os inimigos na proximidade. Use a criatividade
 [feito]🍔 Herói: além da(s) torre(s), o jogador poderá controlar (mouse? teclado?) um pequeno personagem que anda pelo cenário e ataca os inimigos próximos de forma automática (como se fosse uma torre móvel)
 [não feito] Moedas: crie uma moeda que o jogador adquire, de alguma forma, e que pode ser usada para: (a) melhorias na(s) torre(s), ou (b) criar novas torres, ou (c) para melhorias do herói, ou para outro motivo interessante
 Implementação criativa: qualquer implementação que não fuja muito do pedido, mas que traga elementos novos e interessantes para o seu jogo é bem-vinda!

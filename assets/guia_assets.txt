@@ -25,7 +25,7 @@ Spritesheet: 2800x112px
 [17,20] Andando para cima
 [21,25] Conjurando alquimia
 
-ENVY — BOSS (UMA VEZ POR FASE; DUAS FASES POR ENQUANTO)
+ENVY — BOSS DA FASE 1
 Arquivo: enemies/envy.png
 Spritesheet: 2800x112px
 25 quadros
@@ -40,6 +40,25 @@ Spritesheet: 2800x112px
 
 Por enquanto, persegue e ataca a torre mais próxima, assim como o Immortal Soldier.
 Ao atacar, usa provisoriamente a pose [1] e mostra o efeito attack à sua frente.
+
+GLUTTONY — BOSS DA FASE 2
+Arquivo: enemies/gluttony.png
+Spritesheet: 1568x112 pixels
+14 quadros
+
+Os índices abaixo começam em 1, como no restante do guia e no jogo.
+[1,5] Ataque
+[6,9] Caminhada para a esquerda
+[10,14] Efeito do ataque sob o alvo
+[1] Idle durante o cooldown
+
+Nasce à direita na fase 2, atrás dos cinco soldados, com 20 de vida.
+Persegue a torre mais próxima até ficar a 260 pixels dela, usando a caminhada disponível.
+O ataque reproduz os cinco frames completos, com 0,25 segundo por frame (1,25 segundo no total).
+O efeito percorre os cinco frames durante o ataque, com escala 1,5 e deslocamento de 24 pixels para baixo do alvo.
+Causa 5 de dano uma única vez aos 0,75 segundo, se o alvo ainda estiver vivo.
+Depois da animação, espera 3 segundos parado no idle antes do próximo ataque.
+Não há animação de morte neste spritesheet. Ao morrer, deixa o item de gelo.
 
 IMMORTAL SOLDIER — INIMIGO QUE APARECE EM ENXAME
 Arquivo: enemies/immortal_soldier.png
@@ -107,7 +126,7 @@ Spritesheet: 448x112px
 [1,4] Animação de ataque
 Reproduzida à frente do inimigo durante o ataque, com 0,25 s por quadro.
 O efeito original aponta para a direita e é rotacionado conforme a direção do inimigo.
-Cada ataque dura 1 segundo e é seguido por 0,5 segundo de pausa.
+Para Envy e soldados, cada ataque dura 1 segundo e é seguido por 0,5 segundo de pausa.
 O dano é aplicado uma vez, aos 0,5 segundo do ataque: 1 para soldados e 2 para Envy.
 
 BARRA DE VIDA E ÍCONES DE STATUS

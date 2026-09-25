@@ -1,12 +1,14 @@
 import {configuraTudo, desenhaCena, carregarTextura} from "./scripts/draw.js"
 import {Scene} from "./scripts/scene.js"
+import {start_audio,stop_audio,play_sound} from "./scripts/audio.js";
 
 const gl = await configuraTudo(); //"canvas", valor, scale
 const texturaAlphonse = await carregarTextura(gl.gl, "./assets/alphonse/alphonse.png"); //carregamento das textures
 const texturaShaoMay = await carregarTextura(gl.gl, "./assets/towers/shao may.png");
 const envyTexture = await carregarTextura(gl.gl,"./assets/enemies/envy.png");
 const soldierTexture=await carregarTextura(gl.gl,"./assets/enemies/immortal_soldier.png");
-const enemyTextures={envy:envyTexture,immortal_soldier:soldierTexture};
+const gluttonyTexture=await carregarTextura(gl.gl,"./assets/enemies/gluttony.png");
+const enemyTextures={envy:envyTexture,immortal_soldier:soldierTexture,gluttony:gluttonyTexture};
 const effectsTexture=await carregarTextura(gl.gl,"./assets/truth, projectiles and effects/projectiles and effects.png");
 const attackTexture=await carregarTextura(gl.gl,"./assets/truth, projectiles and effects/attack.png");
 const bushTexture=await carregarTextura(gl.gl,"./assets/truth, projectiles and effects/arbusto.png");
@@ -68,7 +70,7 @@ function draw_health(state){
     }
     for(const entity of [state.main_tower,...state.towers,...state.enemies]){
         if(!Number.isFinite(entity.health) || entity.health<=0)continue;
-        const boss=entity.type==="envy";
+        const boss=entity.isBoss;
         if(!boss && (entity.pos.x+entity.size.x<=0 || entity.pos.x>=canvas.width || entity.pos.y+entity.size.y<=0 || entity.pos.y>=canvas.height))continue;
         const burning=entity.burnTime>0;
         const slowed=entity.slowTime>0;
@@ -86,7 +88,7 @@ function draw_health(state){
         if(burning)textContext.drawImage(healthBarImage,244,1,67,78,x+width+4*scaleY,y+19*scaleY,24*scaleY,28*scaleY);
         if(slowed)textContext.drawImage(healthBarImage,336,17,103,73,x+width+(4+(burning?28:0))*scaleY,y+22*scaleY,32*scaleY,23*scaleY);
         textContext.fillText(String(entity.health),x+width/2,y+50*scaleY+9);
-        if(boss)textContext.fillText("Envy",x+width/2,12);
+        if(boss)textContext.fillText(entity.type==="gluttony"?"Gluttony":"Envy",x+width/2,12);
     }
 }
 canvas.addEventListener("click",event=>{
@@ -128,21 +130,29 @@ startButton.disabled=false;
 startButton.addEventListener("click",()=>{
     if(scene.running || scene.gameOver)return;
     scene.start_game();
+    start_audio();
     startScreen.hidden=true;
     dtAntigo=undefined;
     startButton.blur();
 });
 tipsButton.addEventListener("click",()=>{
-    tips.hidden=!tips.hidden;
-    tipsButton.setAttribute("aria-expanded",String(!tips.hidden));
+    tips.showModal();
+    tipsButton.setAttribute("aria-expanded","true");
+});
+document.getElementById("close-tips").addEventListener("click",()=>tips.close());
+tips.addEventListener("close",()=>tipsButton.setAttribute("aria-expanded","false"));
+tips.addEventListener("click",event=>{
+    const rect=tips.getBoundingClientRect();
+    if(event.target===tips && (event.clientX<rect.left || event.clientX>rect.right || event.clientY<rect.top || event.clientY>rect.bottom))tips.close();
 });
 const restartButton=document.getElementById("restart-button");
 restartButton.addEventListener("click",()=>{
     if(!scene.gameOver && !scene.victory)return;
     scene.restart_game();
+    start_audio();
     gameOverScreen.hidden=true;
     startScreen.hidden=true;
-    tips.hidden=true;
+    tips.close();
     tipsButton.setAttribute("aria-expanded","false");
     mouse.x=0;
     mouse.y=0;
@@ -173,6 +183,7 @@ function loopPrincipal(time) {
             pos:{x:bush.x*Math.max(0,canvas.width-112),y:bush.y*Math.max(0,canvas.height-112)},
             quadro:bush.quadro,texture:bushTexture,totalQuadros:5
         })),
+        ...state.attackEffects.filter(effect=>effect.type==="gluttony").map(effect=>({...effect,texture:gluttonyTexture,totalQuadros:14})),
         {...state.main_tower,texture:texturaShaoMay,totalQuadros:4},
         {...state.protagonista,texture:texturaAlphonse,totalQuadros:25},
         ...state.enemies.filter(enemy=>enemy.health>0 || enemy.frames.death!==null).map(enemy=>({...enemy,texture:enemyTextures[enemy.type],totalQuadros:enemy.totalQuadros})),
@@ -183,7 +194,7 @@ function loopPrincipal(time) {
             return [sprite,{...sprite,quadro:weaponFrame}];
         }),
         ...state.projectiles.map(projectile=>({...projectile,texture:effectsTexture,totalQuadros:8})),
-        ...state.attackEffects.map(effect=>({...effect,texture:attackTexture,totalQuadros:4})),
+        ...state.attackEffects.filter(effect=>effect.type!=="gluttony").map(effect=>({...effect,texture:attackTexture,totalQuadros:4})),
         ...state.enemies.filter(enemy=>enemy.health>0 && enemy.burnTime>0).map(enemy=>({
             pos:enemy.pos,quadro:6+Math.floor(enemy.burnAnimationTime/0.5)%3,
             texture:effectsTexture,totalQuadros:8
@@ -192,8 +203,11 @@ function loopPrincipal(time) {
     draw_health(state);
     draw_build_cooldown();
     if(scene.gameOver || scene.victory){
+        stop_audio();
+        play_sound(scene.victory?"victory":"game_over");
         gameOverScreen.querySelector("h1").textContent=scene.victory?"Vitória!":"Game Over";
         gameOverScreen.querySelector("p").textContent=scene.victory?"Você completou as duas fases.":"Shao May foi destruída.";
+        document.getElementById("enemy-count").textContent=`Inimigos derrotados: ${scene.enemiesDefeated}`;
         gameOverScreen.hidden=false;
     }
     requestAnimationFrame(loopPrincipal);
