@@ -1,9 +1,9 @@
 # Fullmetal Tower Defense
-A única coisa desse jogo que foi feita com auxílio de IA é esse readme e os sons
+A única coisa desse jogo que foi feita com auxílio de IA é esse readme e os sons, pq sinceramente no tp0 fiz os sons manualmente mas não fiquei suficientemente satisfeito e o readme é a parte mais chata de fazer
 
 ## O Jogo
 
-Um tower defense 2D inspirado em Fullmetal Alchemist, feito para o [TP1 de Computação Gráfica](https://github.com/fegemo/utf-cg/tree/main/assignments/tp1-td). Você controla o Alphonse e precisa proteger a Shao May no centro do cenário. Para isso, dá para atirar, construir torres e coletar os poderes dos bosses.
+Um tower defense 2D inspirado em Fullmetal Alchemist, feito para o [TP1 de Computação Gráfica](https://github.com/fegemo/utf-cg/tree/main/assignments/tp1-td). Você controla o Alphonse e precisa proteger a Shao May no centro do cenário. Para isso, dá para atirar, construir torres e coletar os drops dos bosses.
 
 **Controles**
 
@@ -42,10 +42,10 @@ Depois acesse `http://localhost:8000` em um navegador com WebGL2. Use um servido
 
 O jogo usa JavaScript e WebGL2, com um canvas 2D por cima para barras e textos. O cenário tem três variações de grama, arbustos e o piso da Shao May. O mapa dos sprites está no [guia de assets](assets/guia_assets.txt).
 
-## Criador(es)
+## Criador
 
-- **Nome:** a preencher.
-- **Contato:** a preencher com e-mail ou perfil para a entrega.
+- **Nome:** Heitor Augusto Botelho.
+- **Contato:** heitorhab123@gmail.com.
 
 ## Media kit
 
@@ -55,10 +55,10 @@ Faltam adicionar aqui de 1 a 3 capturas reais do jogo: por exemplo, o cenário c
 
 Os nomes seguem os tópicos do enunciado. Aqui está o que entrou no jogo:
 
-- **Texturas animadas:** movimento, alquimia, idle, ataques, queimadura e morte do Envy usando spritesheets.
+- **Texturas animadas:** movimentos para todos os lados, alquimia para construção e ataque, animação idle, ataques, queimadura e morte do Envy usando spritesheets (fiz no asepite).
 - **Telas:** menu inicial, dicas em popup, vitória, derrota e reinício. O popup fecha pelo botão, por Esc ou clicando fora.
 - **Sons:** música em loop e 15 efeitos para tiros, impactos, ataques, mortes, alquimia, construção, evolução, coleta, cooldown e resultado.
-- **Inimigos diferentes:** soldados em enxame, Envy corpo a corpo e Gluttony à distância.
+- **Inimigos diferentes:** soldados em enxame, Envy (boss corpo a corpo) e Gluttony (boss à distância).
 - **Inimigos em ondas:** duas fases com bosses e modo infinito com dificuldade crescente.
 - **Novas torres:** construção com E, animação de surgimento, cooldown e distância mínima entre torres.
 - **Torres diferentes:** básica, fogo e gelo, cada uma com sua arma e projétil.
@@ -72,6 +72,6 @@ Alguns detalhes da versão atual: os efeitos são sprites animados, sem sistema 
 
 - **Proposta:** [TP1 — Defesa de Torres, de fegemo/utf-cg](https://github.com/fegemo/utf-cg/tree/main/assignments/tp1-td).
 - **Tema:** inspirado nos personagens e no universo de Fullmetal Alchemist.
-- **Arte:** spritesheets montadas e editadas para o projeto no Aseprite. Falta informar a autoria e os links das imagens-base de terceiros, caso tenham sido usadas.
+- **Arte:** spritesheets montadas e editadas para o projeto no Aseprite. tudo feito por Heitor Augusto Botelho.
 - **Áudio:** música e efeitos sintetizados por código com auxílio do Codex, sem samples externos. Os arquivos usados estão em `audios`.
-- **Ferramentas:** JavaScript, WebGL2, Canvas 2D e Aseprite. O desenvolvimento também teve auxílio do Codex na implementação, revisão e documentação.
+- **Ferramentas:** JavaScript, WebGL2, Canvas 2D e Aseprite. O código foi feito por Heitor Augusto, apenas o readme e o código python para gerar os áudios foi feito pelo codex, o mesmo foi retirado do repositório, mantive somente os arquivos de áudio (codex fdp, escrevi o trem todo e ele queria levar o credito, vou fazer um commit so pra arrumar essa merda de readme aqui que ele fez).
