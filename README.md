@@ -49,7 +49,11 @@ O jogo usa JavaScript e WebGL2, com um canvas 2D por cima para barras e textos. 
 
 ## Media kit
 
-Faltam adicionar aqui de 1 a 3 capturas reais do jogo: por exemplo, o cenário com as torres, a luta contra Gluttony e a tela de resultado. Os sprites em `assets` são recursos do jogo, não capturas da partida.
+![Defesa de Shao May contra Envy e os soldados](assets/WhatsApp%20Image%202026-09-25%20at%2000.30.43.jpeg)
+
+![Gluttony usando seu ataque à distância contra as torres](assets/WhatsApp%20Image%202026-09-25%20at%2000.33.30.jpeg)
+
+![Torres de fogo e gelo defendendo Shao May no modo infinito](assets/WhatsApp%20Image%202026-09-25%20at%2000.34.56.jpeg)
 
 ## Opcionais
 
