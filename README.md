@@ -69,6 +69,7 @@ Os nomes seguem os tópicos do enunciado. Aqui está o que entrou no jogo:
 - **Progressão da torre:** a torre básica pode virar fogo ou gelo depois do desbloqueio. Evoluir também recupera a vida para 15.
 - **Power-ups:** os bosses deixam itens giratórios de fogo e gelo, coletados pelo Alphonse.
 - **Herói:** Alphonse anda pelo teclado e atira pelo mouse, com intervalo de 0,3 segundo. O ataque dele é manual.
+- **Implementações criativas:** Alphonse pode criar torres usando alquimia tendo um tempo de custo pra isso, itens dropados por bosses desbloqueam novas habilidades, as torres construídas também são alvos dos inimigos e os inimigos após o último boss vão aparecendo com mais frequência a medida que o tempo passa.
 
 Alguns detalhes da versão atual: os efeitos são sprites animados, sem sistema de partículas. O canvas acompanha a janela, mas não há botão de tela cheia. Não há moedas, caminhos por pontos ou colisão entre inimigos. Shao May é o objetivo a defender; quem atira são Alphonse e as torres construídas. O contador aparece na tela de resultado, não durante a partida.
 
